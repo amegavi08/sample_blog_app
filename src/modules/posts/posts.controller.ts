@@ -3,18 +3,21 @@ import { PostsService } from './posts.service';
 import { AuthGuard } from '@nestjs/passport';
 import { PostDto } from './post.dto';
 import { Post as PostEntity } from '../posts/post.entity'
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('posts')
 export class PostsController {
     constructor (private readonly postService: PostsService) {}
 
+    @ApiTags('Post')
     @Get()
     async findAll() {
         // get all post in the db
         return await this.postService.findAll();
     }
     
-    @Get('id')
+    @ApiTags('Post')
+    @Get(':id')
     async findOne(@Param('id') id:number): Promise<PostEntity> {
         // find the post with this id
         const post = await this.postService.findOne(id);
@@ -26,6 +29,7 @@ export class PostsController {
         return post;
     }
 
+    @ApiTags('Post')
     @UseGuards(AuthGuard('jwt'))
     @Post()
     async create(@Body() post: PostDto, @Request() req): Promise<PostEntity> {
@@ -33,9 +37,10 @@ export class PostsController {
         return await this.postService.create(post, req.user.id);
     }
 
+    @ApiTags('Post')
     @UseGuards(AuthGuard('jwt'))
     @Put(':id')
-    async update(@Param() id:number, @Body() post: PostDto, @Request() req): Promise<PostEntity> {
+    async update(@Param('id') id:number, @Body() post: PostDto, @Request() req): Promise<PostEntity> {
         // get the numer of rows affected and the updated post
         const { numberOfAffectedRows,updatedPost } = await this.postService.update(id, post, req.user.id);
 
@@ -50,6 +55,7 @@ export class PostsController {
         return updatedPost;
     }
 
+    @ApiTags('Post')
     @UseGuards(AuthGuard('jwt'))
     @Delete(':id')
     async remove(@Param('id') id:number, @Request() req) {
@@ -59,7 +65,7 @@ export class PostsController {
         // if the number of row affected is zero, 
         // then the post doesn't exist in our db
 
-        if (deleted) {
+        if (deleted === 0) {
             throw new NotFoundException('This post does\'t exist');
         }
 
@@ -67,3 +73,4 @@ export class PostsController {
         return 'Successfully deleted';
     }
 }
+
